@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
+const API_BASE = "http://localhost:8000";
 
 async function parseError(response, fallbackMessage) {
   try {
@@ -21,7 +21,6 @@ export default function App() {
   const [status, setStatus] = useState("Ready");
   const [isUploading, setIsUploading] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
-  const [ragMode, setRagMode] = useState("unknown");
 
   const canUpload = useMemo(() => Boolean(file && sessionId && !isUploading), [file, sessionId, isUploading]);
   const canAsk = useMemo(
@@ -32,12 +31,6 @@ export default function App() {
   useEffect(() => {
     const init = async () => {
       try {
-        const healthResponse = await fetch(`${API_BASE}/health`);
-        if (healthResponse.ok) {
-          const healthData = await healthResponse.json();
-          setRagMode(healthData.rag_mode || "unknown");
-        }
-
         const response = await fetch(`${API_BASE}/sessions`, { method: "POST" });
         if (!response.ok) {
           throw new Error(await parseError(response, "Unable to create session."));
@@ -152,7 +145,7 @@ export default function App() {
       <main className="chat-panel card">
         <header>
           <h2>Chat Assistant</h2>
-          <span className="pill">RAG mode: {ragMode}</span>
+          <span className="pill">RAG + Pinecone</span>
         </header>
 
         <section className="chat-feed">
