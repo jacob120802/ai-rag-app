@@ -73,7 +73,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# default RAG_MODE=local works without Pinecone/LLM keys
+# fill credentials in .env
 uvicorn main:app --reload --port 8000
 ```
 
@@ -94,13 +94,6 @@ API docs: `http://localhost:8000/docs`
 
 Use your provided hackathon keys and endpoints.
 
-
-### RAG modes
-
-- `RAG_MODE=local` (default): fully local retrieval mode for quick end-to-end testing without external credentials.
-- `RAG_MODE=pinecone`: production mode using Azure chat/embeddings + Pinecone retrieval.
-
-- `RAG_MODE=local`
 - `GENAI_BASE_URL=https://genailab.tcs.in`
 - `GENAI_API_KEY=...`
 - `CHAT_MODEL=azure_ai/genailab-maas-DeepSeek-V3-0324`

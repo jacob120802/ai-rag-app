@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -14,15 +12,14 @@ from rag import RAGConfig, RAGService
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
-    rag_mode: str = "local"
-    genai_base_url: str = "https://genailab.tcs.in"
-    genai_api_key: str = "replace_me"
-    chat_model: str = "azure_ai/genailab-maas-DeepSeek-V3-0324"
-    embed_model: str = "azure/genailab-maas-text-embedding-3-large"
-    pinecone_api_key: str = "replace_me"
-    pinecone_index: str = "ai-rag-starter"
+    genai_base_url: str
+    genai_api_key: str
+    chat_model: str
+    embed_model: str
+    pinecone_api_key: str
+    pinecone_index: str
     allowed_origins: str = "http://localhost:5173"
     sqlite_path: str = "./app.db"
     top_k: int = 5
@@ -31,9 +28,13 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Pinecone SDK reads API key from env var.
+import os
+
 os.environ["PINECONE_API_KEY"] = settings.pinecone_api_key
 
-app = FastAPI(title="AI RAG Starter API", version="1.1.0")
+app = FastAPI(title="AI RAG Starter API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in settings.allowed_origins.split(",")],
@@ -45,7 +46,6 @@ app.add_middleware(
 db = ChatDB(settings.sqlite_path)
 rag = RAGService(
     RAGConfig(
-        mode=settings.rag_mode,
         base_url=settings.genai_base_url,
         api_key=settings.genai_api_key,
         chat_model=settings.chat_model,
@@ -65,7 +65,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "rag_mode": settings.rag_mode}
+    return {"status": "ok"}
 
 
 @app.post("/sessions")
@@ -85,7 +85,7 @@ def get_documents(session_id: str) -> dict:
 
 @app.post("/upload")
 async def upload_pdf(session_id: str, file: UploadFile = File(...)) -> dict:
-    if not file.filename or not file.filename.lower().endswith(".pdf"):
+    if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
 
     pdf_bytes = await file.read()
